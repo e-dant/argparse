@@ -18,24 +18,17 @@ class argparse {
   vector<string> tokens;
 
  public:
-  // constructor for an iterable vector of arguments
-  argparse(vector<string>& arguments) {
-    for (auto it : arguments)
-      tokens.emplace_back(it);
-  }
 
-  // constructor for an iterator/value pair
-  template <typename LengthIterator>
-  argparse(LengthIterator& count_iterator,
-           char const** argv) {
-    for (auto it : count_iterator)
-      tokens.emplace_back(string(argv[it]));
+  argparse(const int count,
+           const char** argv) {
+    for (auto i = 0; i < count; i++)
+      tokens.push_back(string(argv[i]));
   }
 
   // searches for the given option in `tokens`
   // returns the result, if found;
   // returns an empty object if not found.
-  auto get(string const& option)
+  auto get(const string& option)
       -> const optional<string> {
     // transfers ownership of the search result for &&option
     return (
@@ -60,7 +53,7 @@ class argparse {
 
   // true if given argument exists in `tokens`, false if
   // not.
-  auto has(std::string const& option) const {
+  auto has(const string& option) const {
     return find(begin(tokens), end(tokens), option)
                         != end(tokens)
                     ? false
