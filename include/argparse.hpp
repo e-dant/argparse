@@ -1,65 +1,71 @@
 #include <algorithm>
 #include <iostream>
-#include <iterator>
+#include <numeric>
 #include <optional>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 namespace {
-using std::find;
-using std::optional;
 using std::string;
-using std::vector;
 }  // namespace
 
 class argparse {
  private:
   // `tokens` to represent arguments.
-  vector<string> tokens;
+  std::unordered_map<string, string> tokens;
 
  public:
-  argparse(const int count, const char** argv) {
-    for (auto i = 0; i < count; i++)
-      tokens.push_back(string(argv[i]));
+  argparse(const int argc, const char** argv) {
+    // create a string from argc/v
+    string const args
+        // gross
+        = std::accumulate(argv + 1, argv + argc, string{},
+                          [](auto const& a, auto const& b) {
+                            return a + b + ' ';
+                          });
+    // find all the argument that begin with --
+    // and add them to `tokens`.
+    // auto pos
+    //    = args[0] == '-' ? args.find("--") : string::npos;
+    auto pos = args.find("--");
+    while ((pos = args.find("--", pos)) != string::npos) {
+      const auto end   = args.find(' ', pos);
+      const auto key   = args.substr(pos, end - pos);
+      const auto value = args.substr(
+          end + 1, args.find("--", end + 1) - end - 1);
+      tokens[key] = value;
+      pos         = end;
+    }
   }
 
   // searches for `option` in `tokens`.
   // returns the result, if found.
   // returns nothing, if not found.
-  auto get(const string& option) -> const optional<string> {
-    return ([*this, &option]() -> optional<string> const {
-      // find and return the first
-      // `option` match in `tokens`
-      auto arg_iterator
-          = find(begin(tokens), end(tokens), option);
-      if (arg_iterator != std::end(tokens)) {
-        std::advance(arg_iterator, 1);
-        return *arg_iterator;
-      }
-      // or return nothing,
-      // if nothing was found
-      return {};
-    }());
+  auto at(const string& option) const {
+    return tokens.at(option);
+  }
+
+  // operator [] overload,
+  // which is a shorthand `at`.
+  auto operator[](const string& option) {
+    return tokens[option];
   }
 
   // checks if an argument exists.
   // true if it does.
   // false otherwise.
   // 2958374 on a bad day.
-  bool has(const string& option) const {
-    return find(begin(tokens), end(tokens), option)
-                   != end(tokens)
-               ? false
-               : true;
+  bool contains(const string& option) const {
+    return tokens.contains(option);
   }
 
-  // ostream << operator
+  // operator << overload,
   // e.g. cout << args << endl;
   friend auto operator<<(std::ostream& os,
                          const argparse& args)
       -> std::ostream& {
     for (const auto& token : args.tokens)
-      os << token;
+      os << token.first << " " << token.second << std::endl;
     return os;
   }
 };
