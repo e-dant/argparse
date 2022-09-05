@@ -53,7 +53,8 @@ class argparse {
                : true;
   }
 
-  // iostream << operator
+  // ostream << operator
+  // e.g. cout << args << endl;
   friend auto operator<<(std::ostream& os,
                          const argparse& args)
       -> std::ostream& {
@@ -61,10 +62,4 @@ class argparse {
       os << token;
     return os;
   }
-
-  //// print `tokens` to stdout
-  //auto print() const {
-  //  for (auto it : tokens)
-  //    std::cout << it << std::endl;
-  //}
 };
